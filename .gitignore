@@ -1,0 +1,53 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.db
+*.sqlite3
+
+# Virtual environment
+venv/
+env/
+.env/
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Migrations
+migrations/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# # Docker
+# *.dockerfile
+# Dockerfile*
+# docker-compose.yml
+
+# AWS credentials
+.aws/
+
+# Coverage reports
+.coverage
+*.cover
+
+# Pytest
+.pytest_cache/
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Static files
+static/
+media/
+
+# Videos
+videos/
