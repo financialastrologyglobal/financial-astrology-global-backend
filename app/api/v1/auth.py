@@ -1,10 +1,12 @@
 # app/api/routes/auth.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.schemas.auth import LoginRequest, TokenResponse
-from app.core.security import create_access_token
+from app.schemas.auth import LoginRequest, TokenResponse, ChangePasswordRequest
+from app.core.security import create_access_token, verify_password
 from app.database.session import get_db
-from app.services.auth_service import authenticate_user
+from app.services.auth_service import authenticate_user, change_password
+from app.core.deps import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -39,4 +41,35 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during login"
+        )
+
+@router.post("/change-password")
+def change_password_endpoint(
+    request: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Verify current password
+        if not verify_password(request.current_password, current_user.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Current password is incorrect"
+            )
+
+        # Change password
+        if not change_password(current_user, request.new_password, db):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to change password"
+            )
+
+        return {"message": "Password changed successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[DEBUG] Change password error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while changing password"
         )

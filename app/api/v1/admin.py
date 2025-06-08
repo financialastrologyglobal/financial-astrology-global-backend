@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.models.course import Course
 from app.models.lecture import Lecture
 from app.models.user import User
@@ -38,11 +39,11 @@ def admin_list_users(db: Session = Depends(get_db), current_user: dict = Depends
         # For each user, get their course mappings
         for user in users:
             # Use a direct query to get only the columns that exist
-            result = db.execute("""
+            result = db.execute(text("""
                 SELECT id, user_id, course_id, course_name, created_at 
                 FROM user_course_mapping 
                 WHERE user_id = :user_id
-            """, {"user_id": user.id})
+            """), {"user_id": user.id})
             
             # Convert to the expected format
             user.courses = [
