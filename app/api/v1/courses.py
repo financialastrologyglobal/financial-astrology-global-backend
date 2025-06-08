@@ -183,7 +183,7 @@ async def get_course_lectures(
             UserCourse.course_id == course_id
         ).first()
         
-        if not enrollment:
+        if not enrollment and current_user.role != 'admin':
             raise HTTPException(
                 status_code=403,
                 detail="You must be enrolled in this course to view its lectures"

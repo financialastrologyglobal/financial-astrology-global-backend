@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from app.models.lecture import Lecture
 from app.schemas.lecture import LectureCreate
 from fastapi import HTTPException
+from app.utils.url_utils import normalize_url
+from urllib.parse import urlparse
 
 def create_lecture(db: Session, lecture: LectureCreate, course_id: int) -> Lecture:
     """
@@ -18,12 +20,21 @@ def create_lecture(db: Session, lecture: LectureCreate, course_id: int) -> Lectu
         if not lecture.lecture_url:
             raise HTTPException(status_code=400, detail="Lecture URL is required")
             
-        # Create lecture object with video URL
+        # Normalize URLs to ensure they are either absolute or start with /
+        normalized_lecture_url = normalize_url(lecture.lecture_url)
+        
+        # Handle thumbnail_url: if it's the literal "string" or empty, treat as None
+        if lecture.thumbnail_url == "string" or not lecture.thumbnail_url:
+            normalized_thumbnail_url = None
+        else:
+            normalized_thumbnail_url = normalize_url(lecture.thumbnail_url)
+        
+        # Create lecture object with normalized video URLs
         new_lecture = Lecture(
             name=lecture.name,
             description=lecture.description,
-            thumbnail_url=lecture.thumbnail_url,
-            lecture_url=lecture.lecture_url,
+            thumbnail_url=normalized_thumbnail_url,
+            lecture_url=normalized_lecture_url,
             is_active=lecture.is_active,
             course_id=course_id,  # Use the course_id from the URL parameter
         )

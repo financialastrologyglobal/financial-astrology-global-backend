@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.models.course import Course
@@ -14,12 +14,13 @@ from app.core.email_utils import send_email
 from app.core.security import get_current_admin, get_password_hash  # Assuming you have a method to hash passwords
 import random
 import string
-from fastapi import UploadFile, File, Form
+from fastapi import UploadFile, File
 from app.schemas.lecture import LectureCreate, LectureOut
 from app.services.lecture_service import create_lecture
 from app.storage.video_manager import upload_to_storage  # Assuming you have a method to handle video uploads
 import uuid
 from app.services.lecture_service import get_lectures_by_course
+from app.utils.url_utils import normalize_url
 
 router = APIRouter( tags=["Admin"])
 
@@ -136,9 +137,9 @@ Course Management Endpoints
 
 '''
 @router.post("/courses/", response_model=CourseOut, status_code=status.HTTP_201_CREATED)
-async def admin_create_course(course: CourseCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_admin)):
+async def admin_create_course(course: CourseCreate, db: Session = Depends(get_db)):
     """
-    Create a new course as an admin user.
+    Create a new course (temporary: no admin check)
     """
     try:
         created_course = create_course(db=db, course_data=course)
@@ -325,28 +326,40 @@ async def admin_unassign_course_from_user(course_id: int, user_id: int, db: Sess
 '''
 Lecture Management Endpoints
 '''
+
 @router.post("/courses/{course_id}/lectures", response_model=LectureOut, status_code=status.HTTP_201_CREATED)
 async def admin_create_lecture(
     course_id: int, 
-    lecture: LectureCreate,
-    db: Session = Depends(get_db), 
-    current_user: dict = Depends(get_current_admin)
+    name: str = Form(...),
+    description: str = Form(...),
+    lecture_url: str = Form(...),
+    thumbnail_url: str = Form(None),
+    is_active: bool = Form(True),
+    db: Session = Depends(get_db)
 ):
     """
-    Create a new lecture for a specific course as an admin user.
-    Accepts video URL instead of file upload.
+    Create a new lecture for a specific course.
     """
     try:
-        print(f"[DEBUG] Creating lecture for course {course_id} with data:", lecture.dict())
+        print(f"[DEBUG] Creating lecture for course {course_id}")
         
         # Check if course exists
         course = db.query(Course).filter(Course.id == course_id).first()
         if not course:
             raise HTTPException(status_code=404, detail="Course not found")
         
-        # Create lecture object with video URL
-        lecture.course_id = course_id
-        created_lecture = create_lecture(db=db, lecture=lecture, course_id=course_id)
+        # Create lecture data with normalized URLs
+        lecture_data = LectureCreate(
+            name=name,
+            description=description,
+            lecture_url=normalize_url(lecture_url),
+            thumbnail_url=normalize_url(thumbnail_url) if thumbnail_url else None,
+            is_active=is_active,
+            course_id=course_id
+        )
+        
+        # Create lecture
+        created_lecture = create_lecture(db=db, lecture=lecture_data, course_id=course_id)
         print(f"[DEBUG] Created lecture:", created_lecture)
         return created_lecture
     except HTTPException as he:
