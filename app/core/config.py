@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     SMTP_PORT: int
     GMAIL_EMAIL: str
     GMAIL_PASSWORD: str
+    
+    # Admin credentials
+    ADMIN_EMAIL: str = "admin@finanastrology.com"
+    ADMIN_PASSWORD: str = "Admin@123#"
 
     class Config:
         env_file = ".env"

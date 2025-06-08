@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum, ForeignKey
 from sqlalchemy.orm import relationship
-from app.database.session import Base
+from app.database.base_class import Base
 import enum
-from datetime import datetime as DateTime1
+from datetime import datetime
 
 # Enum for user roles
 class RoleEnum(str, enum.Enum):
@@ -14,13 +14,13 @@ class User(Base):
     
     # Other fields
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), index=True)  # Specify a length for the VARCHAR column
-    email = Column(String(255), unique=True, index=True)  # Specify a length for the VARCHAR column
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
     phone_number = Column(String(20))  # Specify a length for the VARCHAR column (adjust if needed)
     role = Column(Enum(RoleEnum), default=RoleEnum.user)
-    password = Column(String(255))  # Specify a length for the VARCHAR column
-    created_at = Column(DateTime, default=DateTime1.now)
+    password = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
     is_active = Column(Boolean, default=True)
 
-    # Relationships if any
-    # courses = relationship("Course", back_populates="owner")
+    # Relationship with courses through UserCourse model
+    user_courses = relationship("UserCourse", back_populates="user")

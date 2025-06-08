@@ -20,14 +20,28 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    print(f"Verifying password: {plain_password} against {hashed_password}")
-    return pwd_context.verify(plain_password, hashed_password)
+    print(f"[DEBUG] Starting password verification")
+    print(f"[DEBUG] Plain password type: {type(plain_password)}")
+    print(f"[DEBUG] Plain password length: {len(plain_password)}")
+    print(f"[DEBUG] Plain password: {plain_password}")
+    print(f"[DEBUG] Hashed password type: {type(hashed_password)}")
+    print(f"[DEBUG] Hashed password length: {len(hashed_password)}")
+    print(f"[DEBUG] Hashed password: {hashed_password}")
+    
+    try:
+        result = pwd_context.verify(plain_password, hashed_password)
+        print(f"[DEBUG] Verification result: {result}")
+        return result
+    except Exception as e:
+        print(f"[DEBUG] Error during password verification: {str(e)}")
+        return False
 
 # -----------------------
 # JWT Utilities
 # -----------------------
 
 class TokenData(BaseModel):
+    id: int
     username: str
     email: str
     role: str
@@ -42,12 +56,13 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=3)
 def decode_token(token: str) -> TokenData:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id = payload.get("id")
         username = payload.get("username")
         email = payload.get("email")
         role = payload.get("role")
-        if not (username and email and role):
+        if not (user_id and username and email and role):
             raise ValueError("Missing token fields")
-        return TokenData(username=username, email=email, role=role)
+        return TokenData(id=user_id, username=username, email=email, role=role)
     except (JWTError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

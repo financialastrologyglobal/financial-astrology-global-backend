@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from app.api.v1 import admin as admin_router
 from app.api.v1 import auth as auth_router
+from app.api.v1 import courses as courses_router
 from app.database.session import engine
 from app.models import user as user_model
 from app.models import course as course_model
@@ -53,6 +54,7 @@ app.add_middleware(
 # Include routes
 app.include_router(auth_router.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(admin_router.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(courses_router.router, prefix="/api/v1", tags=["Courses"])
 
 # Add Bearer token support in Swagger UI
 def custom_openapi():
