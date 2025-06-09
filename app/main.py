@@ -25,12 +25,7 @@ app = FastAPI(
 # CORS (optional but recommended)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://www.finanastrology.com",
-        "https://finanastrology.com",
-        "http://localhost:3000",  # For local development
-        "http://127.0.0.1:3000"   # For local development
-    ],
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=[
